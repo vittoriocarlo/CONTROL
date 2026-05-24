@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Préstamo de Herramientas</title>
+    <link class="styles" rel="stylesheet" href="CSS/index.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <div class="logo">🛠️ Seguimiento de Herramientas</div>
+            <div style="font-size: 1.5rem; opacity: 0.9; font-weight: 700;">Control Interno</div>
+        </div>
+    </header>
+
+    <main>
+        
+        <div class="card sticky-card">
+            <h2>Registrar Préstamo</h2>
+            <form id="loanForm">
+                <div class="form-group">
+                    <label for="toolCode">Código de Herramienta</label>
+                    <input type="text" id="toolCode" required placeholder="Ej. TAL-01, AMOL-05">
+                </div>
+                <div class="form-group">
+                    <label for="toolName">Herramienta o Equipo</label>
+                    <input type="text" id="toolName" required placeholder="Ej. Amoladora, Caja de dados">
+                </div>
+                <div class="form-group">
+                    <label for="borrowerName">Responsable / Empleado</label>
+                    <input type="text" id="borrowerName" required placeholder="Ej. Carlos Mendoza">
+                </div>
+                <button type="submit" class="btn btn-primary">💾 Guardar Registro</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="table-header">
+                <h2>Historial de Movimientos</h2>
+                <div class="filter-group">
+                    <button onclick="filterRecords('all')" id="btnFilterAll" class="btn-filter active">Todos</button>
+                    <button onclick="filterRecords('Prestado')" id="btnFilterPrestado" class="btn-filter">Prestados</button>
+                    <button onclick="filterRecords('Devuelto')" id="btnFilterDevuelto" class="btn-filter">Devueltos</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Herramienta / Usuario</th>
+                            <th>F. Préstamo</th>
+                            <th>F. Devolución</th>
+                            <th style="text-align: center;">Estado</th>
+                            <th style="text-align: center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTableBody">
+                        </tbody>
+                </table>
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                📭 No se encontraron registros para mostrar.
+            </div>
+        </div>
+
+    </main>
+
+    <script src="JS/index.js"></script>
+</body>
+</html>
