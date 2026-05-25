@@ -1,6 +1,22 @@
-// Carga inicial desde LocalStorage
+
 let records = JSON.parse(localStorage.getItem('pure_css_tool_records')) || [];
 let currentFilter = 'all';
+
+// CONFIGURACIÓN DE FIREBASE
+const firebaseConfig = {
+    apiKey: "AIzaSyDYUxzCk6Vi7BnBmBwPbrq7R56sBEAAANo",
+    authDomain: "control-herramientas-465af.firebaseapp.com",
+    projectId: "control-herramientas-465af",
+    databaseURL: "https://control-herramientas-465af-default-rtdb.firebaseio.com",
+    storageBucket: "control-herramientas-465af.firebasestorage.app",
+    messagingSenderId: "385471713706",
+    appId: "1:385471713706:web:42d69242ae14c339ad9bd3"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+
 
 const loanForm = document.getElementById('loanForm');
 const toolCodeInput = document.getElementById('toolCode');
@@ -9,13 +25,13 @@ const borrowerNameInput = document.getElementById('borrowerName');
 const recordsTableBody = document.getElementById('recordsTableBody');
 const emptyState = document.getElementById('emptyState');
 
-// Escucha cuando se guarda el formulario
+
 loanForm.addEventListener('submit', function(e) {
     e.preventDefault();
 
     const nuevoRegistro = {
         id: Date.now(),
-        code: toolCodeInput.value.trim().toUpperCase(), // Guarda el código siempre en mayúsculas
+        code: toolCodeInput.value.trim().toUpperCase(), 
         tool: toolNameInput.value.trim(),
         borrower: borrowerNameInput.value.trim(),
         loanDate: new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }),
@@ -23,19 +39,18 @@ loanForm.addEventListener('submit', function(e) {
         status: 'Prestado'
     };
 
-    records.unshift(nuevoRegistro); // Lo mete al principio de la lista
+    records.unshift(nuevoRegistro); 
     saveAndRender();
     loanForm.reset();
     toolCodeInput.focus();
 });
 
-// Guarda en LocalStorage y actualiza la vista
+
 function saveAndRender() {
     localStorage.setItem('pure_css_tool_records', JSON.stringify(records));
     renderRecords();
 }
 
-// Alternar estados (Prestado <-> Devuelto)
 function toggleStatus(id) {
     records = records.map(record => {
         if (record.id === id) {
@@ -52,7 +67,7 @@ function toggleStatus(id) {
     saveAndRender();
 }
 
-// Eliminar fila
+
 function deleteRecord(id) {
     if (confirm('¿Deseas eliminar este registro de la base de datos local?')) {
         records = records.filter(record => record.id !== id);
@@ -60,11 +75,11 @@ function deleteRecord(id) {
     }
 }
 
-// Manejador de botones de filtro
+
 function filterRecords(filter) {
     currentFilter = filter;
     
-    // Cambiar estados visuales de los botones de filtro
+    
     document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
     if (filter === 'all') document.getElementById('btnFilterAll').classList.add('active');
     if (filter === 'Prestado') document.getElementById('btnFilterPrestado').classList.add('active');
@@ -73,7 +88,7 @@ function filterRecords(filter) {
     renderRecords();
 }
 
-// Dibuja la tabla en el HTML
+
 function renderRecords() {
     recordsTableBody.innerHTML = '';
 
