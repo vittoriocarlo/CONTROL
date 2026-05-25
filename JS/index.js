@@ -1,7 +1,3 @@
-
-let records = JSON.parse(localStorage.getItem('pure_css_tool_records')) || [];
-let currentFilter = 'all';
-
 // CONFIGURACIÓN DE FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyDYUxzCk6Vi7BnBmBwPbrq7R56sBEAAANo",
@@ -13,9 +9,13 @@ const firebaseConfig = {
     appId: "1:385471713706:web:42d69242ae14c339ad9bd3"
 };
 
+
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
+// Variables globales
+let records = [];
+let currentFilter = 'all';
 
 
 const loanForm = document.getElementById('loanForm');
@@ -25,60 +25,68 @@ const borrowerNameInput = document.getElementById('borrowerName');
 const recordsTableBody = document.getElementById('recordsTableBody');
 const emptyState = document.getElementById('emptyState');
 
+// ESCUCHAR CAMBIOS EN LA NUBE (Firebase) EN TIEMPO REAL
+database.ref('prestamos').on('value', (snapshot) => {
+    const data = snapshot.val();
+    records = [];
+    if (data) {
+        for (let id in data) {
+            records.push({ id, ...data[id] });
+        }
+        // Ordenar para que el registro más nuevo salga arriba
+        records.sort((a, b) => b.timestamp - a.timestamp);
+    }
+    renderRecords();
+});
+
 
 loanForm.addEventListener('submit', function(e) {
     e.preventDefault();
 
     const nuevoRegistro = {
-        id: Date.now(),
         code: toolCodeInput.value.trim().toUpperCase(), 
         tool: toolNameInput.value.trim(),
         borrower: borrowerNameInput.value.trim(),
         loanDate: new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }),
         returnDate: '-',
-        status: 'Prestado'
+        status: 'Prestado',
+        timestamp: Date.now()
     };
 
-    records.unshift(nuevoRegistro); 
-    saveAndRender();
+    
+    database.ref('prestamos').push(nuevoRegistro);
+
     loanForm.reset();
     toolCodeInput.focus();
 });
 
-
-function saveAndRender() {
-    localStorage.setItem('pure_css_tool_records', JSON.stringify(records));
-    renderRecords();
-}
-
 function toggleStatus(id) {
-    records = records.map(record => {
-        if (record.id === id) {
-            if (record.status === 'Prestado') {
-                record.status = 'Devuelto';
-                record.returnDate = new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
-            } else {
-                record.status = 'Prestado';
-                record.returnDate = '-';
-            }
-        }
-        return record;
-    });
-    saveAndRender();
+    const record = records.find(r => r.id === id);
+    if (!record) return;
+
+    if (record.status === 'Prestado') {
+        database.ref('prestamos/' + id).update({
+            status: 'Devuelto',
+            returnDate: new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })
+        });
+    } else {
+        database.ref('prestamos/' + id).update({
+            status: 'Prestado',
+            returnDate: '-'
+        });
+    }
 }
 
 
 function deleteRecord(id) {
-    if (confirm('¿Deseas eliminar este registro de la base de datos local?')) {
-        records = records.filter(record => record.id !== id);
-        saveAndRender();
+    if (confirm('¿Deseas eliminar este registro de la base de datos en la nube?')) {
+        database.ref('prestamos/' + id).remove();
     }
 }
 
 
 function filterRecords(filter) {
     currentFilter = filter;
-    
     
     document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
     if (filter === 'all') document.getElementById('btnFilterAll').classList.add('active');
@@ -88,7 +96,7 @@ function filterRecords(filter) {
     renderRecords();
 }
 
-
+// DIBUJAR LA TABLA EN LA PANTALLA
 function renderRecords() {
     recordsTableBody.innerHTML = '';
 
@@ -123,11 +131,11 @@ function renderRecords() {
             </td>
             <td>
                 <div class="actions-cell">
-                    <button onclick="toggleStatus(${record.id})" 
+                    <button onclick="toggleStatus('${record.id}')" 
                         class="btn btn-action ${isPrestado ? 'btn-status-lend' : 'btn-status-return'}">
                         ${isPrestado ? '↩️ Recibir' : '🔄 Reabrir'}
                     </button>
-                    <button onclick="deleteRecord(${record.id})" class="btn btn-action btn-delete" title="Eliminar">
+                    <button onclick="deleteRecord('${record.id}')" class="btn btn-action btn-delete" title="Eliminar">
                         🗑️
                     </button>
                 </div>
@@ -136,6 +144,3 @@ function renderRecords() {
         recordsTableBody.appendChild(tr);
     });
 }
-
-// Inicialización al abrir la página
-renderRecords();
